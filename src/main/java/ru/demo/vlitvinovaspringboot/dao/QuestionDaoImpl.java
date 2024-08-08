@@ -1,6 +1,7 @@
 package ru.demo.vlitvinovaspringboot.dao;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
 import ru.demo.vlitvinovaspringboot.dto.Question;
@@ -16,17 +17,17 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
-import static ru.demo.vlitvinovaspringboot.util.Constants.FILE_NAME;
-
 @Component
 @RequiredArgsConstructor
 public class QuestionDaoImpl implements QuestionDao {
-
     private final MessageSource messageSource;
+
+    @Value("${application.filename}")
+    private String file;
 
     @Override
     public List<Question> getQuestionList() {
-        String fileName = messageSource.getMessage(FILE_NAME, null, Locale.getDefault());
+        String fileName = messageSource.getMessage(file, null, Locale.getDefault());
         try (InputStream inputStream = ClassLoader.getSystemClassLoader().getResourceAsStream(fileName)) {
             if (inputStream == null) {
                 throw new ResourceNotFoundException("Resource not found: " + fileName);
