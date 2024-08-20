@@ -5,10 +5,7 @@ import org.springframework.stereotype.Service;
 import ru.demo.vlitvinovaspringboot.dao.QuestionDao;
 import ru.demo.vlitvinovaspringboot.dto.Question;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
@@ -22,14 +19,14 @@ public class ProcessAnswerServiceImpl implements ProcessAnswerService {
     private final IOService ioService;
 
     @Override
-    public void processAnswers() {
+    public Map<String, List<String>> processAnswers() {
         ioService.out(ENTER_NAME);
         ioService.read();
         ioService.out(ANSWER_QUESTION, "\n");
 
         List<Question> questionList = questionDao.getQuestionList();
         AtomicInteger score = new AtomicInteger();
-        List<String> resultInfo = new ArrayList<>();
+        Map<String, List<String>> resultInfo = new HashMap<>();
 
         questionList.forEach(question -> {
             showQuestion(question);
@@ -43,8 +40,8 @@ public class ProcessAnswerServiceImpl implements ProcessAnswerService {
             }
             ioService.outQuestion("---------------------------");
         });
-        resultInfo.forEach(info -> ioService.outQuestion(info + "\n"));
         ioService.out(SCORE, score.toString());
+        return resultInfo;
     }
 
     private void showQuestion(Question question) {
@@ -55,19 +52,26 @@ public class ProcessAnswerServiceImpl implements ProcessAnswerService {
         ioService.out(LIST_ANSWERS);
     }
 
-    private void printAnswer(boolean isRightAnswer, List<String> resultInfo, Question question) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(question.getQuestionFromFile());
-        sb.append("-");
+    private void printAnswer(boolean isRightAnswer, Map<String, List<String>> resultInfo, Question question) {
         if (isRightAnswer) {
             ioService.out(RIGHT);
-            sb.append(RIGHT);
+            fillMap(resultInfo, question, RIGHT);
         } else {
             ioService.out(WRONG);
-            sb.append(WRONG);
+            fillMap(resultInfo, question, WRONG);
         }
-        resultInfo.add(sb.toString());
+
     }
+
+    private void fillMap(Map<String, List<String>> resultInfo, Question question, String answer) {
+        List<String> questions = new ArrayList<>();
+        if (resultInfo.get(answer) != null) {
+            questions = resultInfo.get(answer);
+        }
+        questions.add(question.getQuestionFromFile());
+        resultInfo.put(answer, questions);
+    }
+
 
     private boolean testUser(Question question) {
         List<String> listAnswers = Arrays.asList(ioService.read()

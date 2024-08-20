@@ -1,16 +1,23 @@
 package ru.demo.vlitvinovaspringboot.service;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.util.CollectionUtils;
 import ru.demo.vlitvinovaspringboot.dao.QuestionDao;
 import ru.demo.vlitvinovaspringboot.dto.Question;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static ru.demo.vlitvinovaspringboot.util.Constants.RIGHT;
+import static ru.demo.vlitvinovaspringboot.util.Constants.WRONG;
 
 @ExtendWith(MockitoExtension.class)
 class ProcessAnswerServiceImplTest {
@@ -26,17 +33,18 @@ class ProcessAnswerServiceImplTest {
     @Test
     void testProcessAnswers() {
         Question question1 = new Question("What is Java?",
-                Arrays.asList("A programming language", "A coffee"), Arrays.asList("A programming language"));
-        Question question2 = new Question("What is Python?",
-                Arrays.asList("A snake", "A programming language"), Arrays.asList("A programming language"));
+                Arrays.asList("A programming language", "A coffee"), Arrays.asList("1"));
 
-        when(questionDao.getQuestionList()).thenReturn(Arrays.asList(question1, question2));
-        when(ioService.read()).thenReturn("User", "1", "2");
+        when(questionDao.getQuestionList()).thenReturn(Arrays.asList(question1));
+        when(ioService.read()).thenReturn( "1");
 
-        processAnswerService.processAnswers();
+        Map<String, List<String>> result =  processAnswerService.processAnswers();
 
-        verify(ioService, times(5)).out(any());
-        verify(ioService, times(10)).outQuestion(any());
-        verify(ioService, times(3)).read();
+        assertFalse(CollectionUtils.isEmpty(result));
+        assertNull(result.get(WRONG));
+        assertNotNull(result.get(RIGHT));
+        verify(ioService, times(3)).out(any());
+        verify(ioService, times(4)).outQuestion(any());
+        verify(ioService, times(2)).read();
     }
 }
