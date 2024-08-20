@@ -1,68 +1,50 @@
 package ru.demo.vlitvinovaspringboot.service;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.util.CollectionUtils;
 import ru.demo.vlitvinovaspringboot.dao.QuestionDao;
 import ru.demo.vlitvinovaspringboot.dto.Question;
 
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.io.PrintStream;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static ru.demo.vlitvinovaspringboot.util.Constants.RIGHT;
+import static ru.demo.vlitvinovaspringboot.util.Constants.WRONG;
 
 @ExtendWith(MockitoExtension.class)
 class ProcessAnswerServiceImplTest {
-    private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    private final PrintStream originalOut = System.out;
-    private final InputStream originalIn = System.in;
-
     @Mock
     private QuestionDao questionDao;
 
     @Mock
     private IOService ioService;
 
-    ProcessAnswerServiceImpl processAnswerService;
-
-    @BeforeEach
-    public void setUp() {
-        processAnswerService = new ProcessAnswerServiceImpl(questionDao, ioService);
-        System.setOut(new PrintStream(outputStream));
-    }
-
-    @AfterEach
-    public void restoreStreams() {
-        System.setOut(originalOut);
-        System.setIn(originalIn);
-    }
+    @InjectMocks
+    private ProcessAnswerServiceImpl processAnswerService;
 
     @Test
     void testProcessAnswers() {
-        List<Question> questionList = new ArrayList<>();
-        Question question1 = new Question("Question 1", new ArrayList<>(), new ArrayList<>());
-        Question question2 = new Question("Question 2", new ArrayList<>(), new ArrayList<>());
-        questionList.add(question1);
-        questionList.add(question2);
+        Question question1 = new Question("What is Java?",
+                Arrays.asList("A programming language", "A coffee"), Arrays.asList("1"));
 
-        when(questionDao.getQuestionList()).thenReturn(questionList);
-        when(ioService.getUserAnswers()).thenReturn(new ArrayList<>());
+        when(questionDao.getQuestionList()).thenReturn(Arrays.asList(question1));
+        when(ioService.read()).thenReturn( "1");
 
-        processAnswerService.processAnswers();
+        Map<String, List<String>> result =  processAnswerService.processAnswers();
 
-        verify(ioService).printWelcomeInfo();
-        verify(questionDao).getQuestionList();
-        verify(ioService, times(2)).printQuestionWithPossibleAnswers(any(Question.class));
-        verify(ioService, times(2)).printAnswer(anyBoolean());
-        verify(ioService, times(2)).splitSections();
-        verify(ioService).getResultScore(any(AtomicInteger.class));
-
+        assertFalse(CollectionUtils.isEmpty(result));
+        assertNull(result.get(WRONG));
+        assertNotNull(result.get(RIGHT));
+        verify(ioService, times(3)).out(any());
+        verify(ioService, times(4)).outQuestion(any());
+        verify(ioService, times(2)).read();
     }
 }

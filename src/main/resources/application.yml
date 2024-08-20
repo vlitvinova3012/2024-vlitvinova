@@ -1,0 +1,8 @@
+spring:
+  messages:
+    basename: i18n/consolemsg
+    encoding: UTF-8
+    fallback-to-system-locale: false
+
+application:
+  filename: questions
